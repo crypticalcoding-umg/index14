@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derivadas Parciales</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #000000; 
+            color: #009744; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        .calculator { 
+            border: 1px solid #ccc; 
+            padding: 20px; 
+            border-radius: 10px; 
+            width: 100%; 
+            max-width: 600px; 
+            background: #fff; 
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); 
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .calculator input, .calculator button { 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+            font-size: 1em; 
+        }
+        .calculator input {
+            width: 100%;
+        }
+        .calculator input[type="number"] {
+            width: calc(50% - 5px);
+        }
+        .calculator button {
+            width: 100%;
+            background-color: #008f5f;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .calculator button:hover {
+            background-color: #00b185;
+        }
+        .result { 
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8fafc;
+        }
+        .result-section {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #00925a;
+        }
+        .error {
+            color: #dc2626;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #fee2e2;
+            border-radius: 5px;
+        }
+        .math-expression {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculadora de Derivadas Parciales</h1>
+    <div class="calculator">
+        <div class="input-group">
+            <label for="function-input">Función (en términos de x y y):</label>
+            <input type="text" id="function-input" placeholder="Ej. x^2 + y^2">
+        </div>
+        
+        <div class="input-group">
+            <label>Punto de evaluación (opcional):</label>
+            <div class="input-row">
+                <input type="number" id="x-point" placeholder="x" step="any">
+                <input type="number" id="y-point" placeholder="y" step="any">
+            </div>
+        </div>
+
+        <button onclick="calculatePartialDerivatives()">Calcular Derivadas Parciales</button>
+        
+        <div class="result" id="result-output"></div>
+    </div>
+
+    <script>
+        function formatExpression(expr) {
+            return expr.replace(/\*\*/g, '^').replace(/\*/g, '·');
+        }
+
+        function evaluateAtPoint(expr, x, y) {
+            try {
+                return math.evaluate(expr, { x: x, y: y });
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function calculatePartialDerivatives() {
+            const funcInput = document.getElementById("function-input").value;
+            const xPoint = document.getElementById("x-point").value;
+            const yPoint = document.getElementById("y-point").value;
+            const resultDiv = document.getElementById("result-output");
+
+            try {
+                // Validar la función
+                const func = math.parse(funcInput).toString();
+
+                // Calcular derivadas parciales de primer orden
+                const dx = math.derivative(func, 'x').toString();
+                const dy = math.derivative(func, 'y').toString();
+
+                // Calcular derivadas parciales de segundo orden
+                const dxx = math.derivative(dx, 'x').toString();
+                const dyy = math.derivative(dy, 'y').toString();
+                const dxy = math.derivative(dx, 'y').toString();
+                const dyx = math.derivative(dy, 'x').toString();
+
+                let html = `<div class="result-section">
+                    <h3>Función original:</h3>
+                    <div class="math-expression">f(x,y) = ${formatExpression(func)}</div>
+                </div>`;
+
+                html += `<div class="result-section">
+                    <h3>Derivadas parciales de primer orden:</h3>
+                    <div class="math-expression">∂f/∂x = ${formatExpression(dx)}</div>
+                    <div class="math-expression">∂f/∂y = ${formatExpression(dy)}</div>
+                </div>`;
+
+                html += `<div class="result-section">
+                    <h3>Derivadas parciales de segundo orden:</h3>
+                    <div class="math-expression">∂²f/∂x² = ${formatExpression(dxx)}</div>
+                    <div class="math-expression">∂²f/∂y² = ${formatExpression(dyy)}</div>
+                    <div class="math-expression">∂²f/∂x∂y = ${formatExpression(dxy)}</div>
+                    <div class="math-expression">∂²f/∂y∂x = ${formatExpression(dyx)}</div>
+                </div>`;
+
+                // Evaluar en punto específico si se proporcionaron coordenadas
+                if (xPoint !== "" && yPoint !== "") {
+                    const x = parseFloat(xPoint);
+                    const y = parseFloat(yPoint);
+
+                    const fValue = evaluateAtPoint(func, x, y);
+                    const dxValue = evaluateAtPoint(dx, x, y);
+                    const dyValue = evaluateAtPoint(dy, x, y);
+                    const dxxValue = evaluateAtPoint(dxx, x, y);
+                    const dyyValue = evaluateAtPoint(dyy, x, y);
+                    const dxyValue = evaluateAtPoint(dxy, x, y);
+
+                    html += `<div class="result-section">
+                        <h3>Evaluación en el punto (${x}, ${y}):</h3>
+                        <div class="math-expression">f(${x},${y}) = ${fValue !== null ? fValue.toFixed(4) : 'No definido'}</div>
+                        <div class="math-expression">∂f/∂x(${x},${y}) = ${dxValue !== null ? dxValue.toFixed(4) : 'No definido'}</div>
+                        <div class="math-expression">∂f/∂y(${x},${y}) = ${dyValue !== null ? dyValue.toFixed(4) : 'No definido'}</div>
+                        <div class="math-expression">∂²f/∂x²(${x},${y}) = ${dxxValue !== null ? dxxValue.toFixed(4) : 'No definido'}</div>
+                        <div class="math-expression">∂²f/∂y²(${x},${y}) = ${dyyValue !== null ? dyyValue.toFixed(4) : 'No definido'}</div>
+                        <div class="math-expression">∂²f/∂x∂y(${x},${y}) = ${dxyValue !== null ? dxyValue.toFixed(4) : 'No definido'}</div>
+                    </div>`;
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error en la función ingresada. Verifica la sintaxis.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
